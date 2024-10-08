@@ -117,20 +117,63 @@ class Dom implements DomInterface
      * @throws StrictException
      * @throws ClientExceptionInterface
      */
+    // public function loadFromUrl(string $url, ?Options $options = null, ?ClientInterface $client = null, ?RequestInterface $request = null): Dom
+    // {
+    //     if ($client === null) {
+    //         $client = new Client();
+    //     }
+    //     if ($request === null) {
+    //         $request = new Request('GET', $url);
+    //     }
+
+    //     $response = $client->sendRequest($request);
+    //     $content = $response->getBody()->getContents();
+
+    //     return $this->loadStr($content, $options);
+    // }
+
+        /**
+     * Use a curl interface implementation to attempt to load
+     * the content from a url.
+     *
+     * @throws ChildNotFoundException
+     * @throws CircularException
+     * @throws Exceptions\ContentLengthException
+     * @throws LogicalException
+     * @throws StrictException
+     * @throws ClientExceptionInterface
+     */
     public function loadFromUrl(string $url, ?Options $options = null, ?ClientInterface $client = null, ?RequestInterface $request = null): Dom
     {
-        if ($client === null) {
-            $client = new Client();
-        }
-        if ($request === null) {
-            $request = new Request('GET', $url);
-        }
+        try {
+            // If the client is null, instantiate a new Client
+            if ($client === null) {
+                $client = new Client();
+            }
 
-        $response = $client->sendRequest($request);
-        $content = $response->getBody()->getContents();
+            // If the request is null, instantiate a new Request
+            if ($request === null) {
+                $request = new Request('GET', $url);
+            }
 
-        return $this->loadStr($content, $options);
+            // Attempt to get the response from the URL
+            $response = $client->send($request);
+            $content = $response->getBody()->getContents();
+
+            // Check if the content is empty
+            if (empty($content)) {
+                throw new \Exception("The content fetched from the URL is empty.");
+            }
+
+            // Load the content into the DOM
+            return $this->loadStr($content, $options);
+
+        } catch (\Exception $e) {
+            // Handle exceptions and rethrow with a clear message
+            throw new \Exception("Failed to load content from URL: " . $e->getMessage());
+        }
     }
+
 
     /**
      * Parsers the html of the given string. Used for load(), loadFromFile(),
